@@ -44,7 +44,6 @@ const TimerApp = () => {
       isRunning: false,
       lastStart: null,
       timeEntries: [],
-      originalTime: 0,
     };
     setProjects([...projects, newProject]);
     setCurrentProject('');
@@ -72,10 +71,10 @@ const TimerApp = () => {
         };
       }
 
-      if (action === 'restart') {
+   if (action === 'restart') {
   return {
     ...project,
-    time: project.originalTime || 0,
+    time: 0, // ✅ always reset to 0
     isRunning: false,
     lastStart: null,
     timeEntries: [],
@@ -95,13 +94,7 @@ const TimerApp = () => {
     });
   };
 
-  const setInitialTime = (id, hours, minutes) => {
-  const totalSeconds = (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60;
-  setProjects(projects.map(project => {
-    if (project.id !== id) return project;
-    return { ...project, time: totalSeconds, originalTime: totalSeconds };
-  }));
-};
+ 
 
 
   const setLimit = (id, limitMinutes) => {
@@ -289,73 +282,38 @@ const TimerApp = () => {
 </button>
                 </div>
 
-                {/* Initial Time */}
-                <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <label className="text-sm font-medium text-gray-600 w-28">
-                    Initial Time:
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min="0"
-                      value={hours}
-                      onChange={e => setInitialTime(project.id, e.target.value, minutes)}
-                      placeholder="Hours"
-                      className="rounded-lg px-4 py-2 w-20 bg-white text-gray-900 ring-1 ring-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300"
-                      aria-label={`Hours for ${project.name}`}
-                    />
-                    <span className="text-sm text-gray-600">h</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="59"
-                      value={minutes}
-                      onChange={e => setInitialTime(project.id, hours, e.target.value)}
-                      placeholder="Min"
-                      className="rounded-lg px-4 py-2 w-20 bg-white text-gray-900 ring-1 ring-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300"
-                      aria-label={`Minutes for ${project.name}`}
-                    />
-                    <span className="text-sm text-gray-600">m</span>
-                  </div>
-                </div>
-
+            
                 {/* Time Limit */}
                 <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   <label className="text-sm font-medium text-gray-600 w-28">
                     Time Limit:
                   </label>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <button
-                      onClick={() => adjustTimeLimit(project.id, -1)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:from-gray-600 hover:to-gray-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300 transform"
-                      aria-label={`Decrease time limit for ${project.name} by 1 hour`}
-                    >
-                      <MinusIcon className="h-5 w-5" />
-                      Hour
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={timeLimits[project.id] ? timeLimits[project.id] / 60 : ''}
-                      onChange={e => setLimit(project.id, e.target.value)}
-                      placeholder="Min"
-                      className="rounded-lg px-4 py-2 w-20 bg-white text-gray-900 ring-1 ring-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300"
-                      aria-label={`Time limit in minutes for ${project.name}`}
-                    />
-                    <button
-                      onClick={() => adjustTimeLimit(project.id, 1)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:from-gray-600 hover:to-gray-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300 transform"
-                      aria-label={`Increase time limit for ${project.name} by 1 hour`}
-                    >
-                      <PlusIcon className="h-5 w-5" />
-                      Hour
-                    </button>
-                    {timeLimits[project.id] && (
-                      <span className="text-sm font-medium text-gray-600">
-                        {Math.max(0, ((timeLimits[project.id] - project.time) / 3600).toFixed(1))}h left
-                      </span>
-                    )}
-                  </div>
+                  {/* Example addition for limit controls */}
+<div className="flex gap-2 mt-4 items-center">
+  <button
+    onClick={() => adjustTimeLimit(project.id, -1)}
+    className="bg-gray-100 p-2 rounded-lg hover:bg-gray-200 transition"
+    aria-label="Decrease limit"
+  >
+    <MinusIcon className="w-5 h-5 text-gray-600" />
+  </button>
+  <span className="text-sm text-gray-600 font-medium">
+    {(() => {
+      const limit = timeLimits[project.id] || 0;
+      const h = Math.floor(limit / 3600);
+      const m = Math.floor((limit % 3600) / 60);
+      return `Limit: ${h}h ${m}m`;
+    })()}
+  </span>
+  <button
+    onClick={() => adjustTimeLimit(project.id, 1)}
+    className="bg-gray-100 p-2 rounded-lg hover:bg-gray-200 transition"
+    aria-label="Increase limit"
+  >
+    <PlusIcon className="w-5 h-5 text-gray-600" />
+  </button>
+</div>
+
                 </div>
               </div>
             );
