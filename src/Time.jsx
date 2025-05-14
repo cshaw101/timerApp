@@ -44,6 +44,7 @@ const TimerApp = () => {
       isRunning: false,
       lastStart: null,
       timeEntries: [],
+      originalTime: 0,
     };
     setProjects([...projects, newProject]);
     setCurrentProject('');
@@ -71,23 +72,16 @@ const TimerApp = () => {
         };
       }
 
-      if (action === 'stop') {
-        const elapsed = project.isRunning
-          ? Math.floor((Date.now() - project.lastStart) / 1000)
-          : 0;
-        return {
-          ...project,
-          time: project.time + elapsed,
-          isRunning: false,
-          lastStart: null,
-          timeEntries: elapsed
-            ? [
-                ...project.timeEntries,
-                { timestamp: Date.now(), duration: elapsed },
-              ]
-            : project.timeEntries,
-        };
-      }
+      if (action === 'restart') {
+  return {
+    ...project,
+    time: project.originalTime || 0,
+    isRunning: false,
+    lastStart: null,
+    timeEntries: [],
+  };
+}
+
 
       return project;
     }));
@@ -102,12 +96,13 @@ const TimerApp = () => {
   };
 
   const setInitialTime = (id, hours, minutes) => {
-    const totalSeconds = (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60;
-    setProjects(projects.map(project => {
-      if (project.id !== id) return project;
-      return { ...project, time: totalSeconds };
-    }));
-  };
+  const totalSeconds = (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60;
+  setProjects(projects.map(project => {
+    if (project.id !== id) return project;
+    return { ...project, time: totalSeconds, originalTime: totalSeconds };
+  }));
+};
+
 
   const setLimit = (id, limitMinutes) => {
     const limit = limitMinutes ? Math.max(1, parseInt(limitMinutes)) * 60 : 0;
@@ -225,22 +220,35 @@ const TimerApp = () => {
 
                 {/* Progress Bar */}
                 {timeLimits[project.id] && (
-                  <div className="mt-6 space-y-3">
-                    <div className="flex justify-between text-sm font-medium text-gray-600">
-                      <span>Progress</span>
-                      <span>
-                        {((project.time / timeLimits[project.id]) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-gradient-to-r from-indigo-500 to-indigo-700 h-3 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(Math.max((project.time / timeLimits[project.id]) * 100, 0), 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
+               <div className="mt-6 space-y-3">
+  <div className="flex justify-between text-sm font-medium text-gray-600">
+    <span>Progress</span>
+    <span>
+      {((project.time / timeLimits[project.id]) * 100).toFixed(1)}%
+    </span>
+  </div>
+  <div className="w-full bg-gray-200 rounded-full h-3">
+    <div
+      className="bg-gradient-to-r from-indigo-500 to-indigo-700 h-3 rounded-full transition-all duration-500"
+      style={{
+        width: `${Math.min(Math.max((project.time / timeLimits[project.id]) * 100, 0), 100)}%`,
+      }}
+    ></div>
+  </div>
+  {/* Time Remaining */}
+ <div className="flex justify-between text-sm font-medium text-gray-600 mt-1">
+  <span>
+    {(() => {
+      const remaining = Math.max(0, timeLimits[project.id] - project.time);
+      const h = Math.floor(remaining / 3600);
+      const m = Math.floor((remaining % 3600) / 60);
+      return `Time Remaining: ${h}h ${m}m`;
+    })()}
+  </span>
+
+</div>
+</div>
+
                 )}
 
                 {/* Timer Controls */}
@@ -271,14 +279,14 @@ const TimerApp = () => {
                     <PauseIcon className="h-5 w-5" />
                     Pause
                   </button>
-                  <button
-                    onClick={() => toggleTimer(project.id, 'stop')}
-                    className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white px-5 py-3 rounded-lg font-medium shadow-md hover:from-rose-600 hover:to-rose-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 transition duration-300 transform"
-                    aria-label={`Stop timer for ${project.name}`}
-                  >
-                    <StopIcon className="h-5 w-5" />
-                    Stop
-                  </button>
+                 <button
+  onClick={() => toggleTimer(project.id, 'restart')}
+  className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white px-5 py-3 rounded-lg font-medium shadow-md hover:from-rose-600 hover:to-rose-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 transition duration-300 transform"
+  aria-label={`Restart timer for ${project.name}`}
+>
+  <StopIcon className="h-5 w-5" />
+  Restart
+</button>
                 </div>
 
                 {/* Initial Time */}
